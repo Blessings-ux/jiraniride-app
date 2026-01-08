@@ -23,7 +23,7 @@ export default function Signup() {
     setError('');
     setIsLoading(true);
 
-    const { error: signUpError } = await signUp(formData);
+    const { error: signUpError, data } = await signUp(formData);
 
     if (signUpError) {
       setError(signUpError.message || 'Failed to sign up');
@@ -31,16 +31,32 @@ export default function Signup() {
       return;
     }
 
-    setSuccess(true);
     setIsLoading(false);
+
+    // If email confirmation is disabled, redirect directly to dashboard
+    if (data?.user && !data.user.identities?.length === 0) {
+      // Redirect based on selected role
+      switch (formData.role) {
+        case 'driver':
+          navigate('/driver');
+          break;
+        case 'passenger':
+        default:
+          navigate('/passenger');
+          break;
+      }
+    } else {
+      // Show success message for email confirmation
+      setSuccess(true);
+    }
   };
 
   if (success) {
     return (
       <div className="text-center space-y-4">
-        <h2 className="text-2xl font-bold text-green-600">Account Created!</h2>
+        <h2 className="text-2xl font-bold text-emerald-600">Account Created!</h2>
         <p className="text-gray-600">
-          Your account has been successfully created. Please check your email to verify your account before logging in.
+          Your account has been successfully created. Please check your email to verify your account, then log in.
         </p>
         <Button onClick={() => navigate('/login')} className="w-full">
           Go to Login
