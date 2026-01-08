@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
+import { supabase } from '../../services/supabase';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
-import { Loader2 } from 'lucide-react';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -25,15 +25,34 @@ export default function Login() {
       return;
     }
 
-    // Role-based redirection will be handled by the protected route or we can force it here
-    // For smoother experience, we'll let the router/state listener handle it, 
-    // but usually we want to explicit redirect after action.
-    
-    // We need to fetch the profile to know where to go? 
-    // The store updates asynchronously. Let's wait a tick or rely on the profile 
-    // being fetched in the store's initialize/signin flow if we properly awaited it.
-    // For now, let's just go home path and let the Route guard redirect.
-    navigate('/'); 
+    // Fetch the user's profile to determine their role
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', data.user.id)
+      .single();
+
+    setIsLoading(false);
+
+    if (profileError || !profile) {
+      // Default to passenger if profile not found
+      navigate('/passenger');
+      return;
+    }
+
+    // Redirect based on role
+    switch (profile.role) {
+      case 'admin':
+        navigate('/admin');
+        break;
+      case 'driver':
+        navigate('/driver');
+        break;
+      case 'passenger':
+      default:
+        navigate('/passenger');
+        break;
+    }
   };
 
   return (
