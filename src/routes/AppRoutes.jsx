@@ -1,10 +1,10 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import AppLayout from '../layouts/AppLayout';
 import AuthLayout from '../layouts/AuthLayout';
 import Login from '../features/auth/Login';
 import Signup from '../features/auth/Signup';
 import LandingPage from '../features/landing/LandingPage';
-import PassengerDashboard from '../features/passenger/Dashboard';
+import PassengerHome from '../features/passenger/PassengerHome';
 import DriverDashboard from '../features/driver/Dashboard';
 import AdminDashboard from '../features/admin/Dashboard';
 import ProtectedRoute from '../components/ProtectedRoute';
@@ -20,14 +20,15 @@ const AppRoutes = () => {
         <Route path="/signup" element={<Signup />} />
       </Route>
       
-      {/* Protected Routes */}
+      {/* Passenger Route - Full Screen (No AppLayout) */}
+      <Route path="/passenger" element={
+        <ProtectedRoute allowedRoles={['passenger']}>
+          <PassengerHome />
+        </ProtectedRoute>
+      } />
+      
+      {/* Protected Routes with AppLayout */}
       <Route element={<AppLayout />}>
-        <Route path="/passenger" element={
-          <ProtectedRoute allowedRoles={['passenger']}>
-            <PassengerDashboard />
-          </ProtectedRoute>
-        } />
-        
         <Route path="/driver" element={
           <ProtectedRoute allowedRoles={['driver']}>
             <DriverDashboard />
@@ -45,3 +46,6 @@ const AppRoutes = () => {
 };
 
 export default AppRoutes;
+
+
+
