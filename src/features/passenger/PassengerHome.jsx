@@ -1,6 +1,6 @@
 // src/features/passenger/PassengerHome.jsx
 import { useState, useEffect } from 'react';
-import { MapPin, Menu, History, Star, CreditCard, User, LogOut, Navigation, Bike, Car, Zap, X, Loader2, Phone, ArrowLeft, Gift, CheckCircle, Save, Users } from 'lucide-react';
+import { MapPin, Menu, History, Star, CreditCard, User, LogOut, Navigation, Bike, Car, Zap, X, Loader2, Phone, ArrowLeft, Gift, CheckCircle, Save, Users, Settings, Bell, Moon, Globe, Shield, ChevronRight } from 'lucide-react';
 import { supabase } from '../../services/supabase';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
@@ -21,6 +21,20 @@ export default function PassengerHome() {
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [profileForm, setProfileForm] = useState({ full_name: profile?.full_name || '', phone: profile?.phone || '' });
   const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [appSettings, setAppSettings] = useState({
+    notifications: true,
+    darkMode: false,
+    language: 'English'
+  });
+
+  // Dark mode effect
+  useEffect(() => {
+    if (appSettings.darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [appSettings.darkMode]);
 
   const userName = profile?.full_name?.split(' ')[0] || 'there';
   const userPoints = profile?.loyalty_points || 0;
@@ -103,16 +117,8 @@ export default function PassengerHome() {
           style={{ paddingTop: 'max(20px, env(safe-area-inset-top))' }}
         >
           <div className="flex justify-between items-center">
-            {/* Hamburger Menu */}
-            <button 
-              onClick={() => setMenuOpen(true)} 
-              className="bg-white p-3 rounded-2xl shadow-lg hover:bg-slate-50 transition active:scale-95 border border-slate-200/50"
-            >
-              <Menu className="w-6 h-6 text-slate-700" />
-            </button>
-            
             {/* User Greeting + Points */}
-            <div className="bg-white px-4 py-2.5 rounded-2xl shadow-lg flex items-center gap-3 border border-slate-200/50">
+            <div onClick={() => openPanel('profile')} className="bg-white px-4 py-2.5 rounded-2xl shadow-lg flex items-center gap-3 border border-slate-200/50 cursor-pointer active:scale-95 transition">
               <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-xl flex items-center justify-center text-white text-sm font-bold shadow-inner">
                 {userInitials}
               </div>
@@ -124,6 +130,14 @@ export default function PassengerHome() {
                 </div>
               </div>
             </div>
+
+            {/* Settings Button */}
+            <button 
+              onClick={() => openPanel('settings')}
+              className="bg-white p-3 rounded-2xl shadow-lg hover:bg-slate-50 transition active:scale-95 border border-slate-200/50 text-slate-700"
+            >
+              <Settings className="w-6 h-6" />
+            </button>
           </div>
         </div>
         
@@ -194,6 +208,7 @@ export default function PassengerHome() {
               <QuickAction icon={CreditCard} label="Pay" onClick={() => openPanel('payment')} />
               <QuickAction icon={Gift} label="Rewards" onClick={() => openPanel('loyalty')} />
               <QuickAction icon={User} label="Profile" onClick={() => openPanel('profile')} />
+              <QuickAction icon={Settings} label="Settings" onClick={() => openPanel('settings')} />
             </div>
           </div>
 
@@ -205,6 +220,7 @@ export default function PassengerHome() {
                 userPhone={userPhone} userPoints={userPoints} userInitials={userInitials}
                 user={user} profileForm={profileForm} setProfileForm={setProfileForm}
                 handleSaveProfile={handleSaveProfile} isSavingProfile={isSavingProfile}
+                appSettings={appSettings} setAppSettings={setAppSettings}
               />
             ) : (
               <BookingPanel 
@@ -252,7 +268,7 @@ export default function PassengerHome() {
 
       {/* === MOBILE PANEL OVERLAYS === */}
       {activePanel && (
-        <div className="lg:hidden fixed inset-0 z-[60] bg-white overflow-y-auto">
+        <div className="lg:hidden fixed inset-0 z-[2000] bg-white overflow-y-auto">
           <div className="sticky top-0 bg-white border-b border-slate-100 p-4 flex items-center gap-4">
             <button onClick={() => setActivePanel(null)} className="p-2 -ml-2 hover:bg-slate-100 rounded-full transition"><ArrowLeft className="w-5 h-5 text-slate-700" /></button>
             <h2 className="text-lg font-bold text-slate-900">{activePanel === 'rides' ? 'Your Rides' : activePanel === 'payment' ? 'Payment Methods' : activePanel === 'loyalty' ? 'Loyalty Rewards' : 'Profile Settings'}</h2>
@@ -262,6 +278,7 @@ export default function PassengerHome() {
               userPhone={userPhone} userPoints={userPoints} userInitials={userInitials}
               user={user} profileForm={profileForm} setProfileForm={setProfileForm}
               handleSaveProfile={handleSaveProfile} isSavingProfile={isSavingProfile}
+              appSettings={appSettings} setAppSettings={setAppSettings}
             />
           </div>
         </div>
@@ -600,7 +617,7 @@ function DesktopPanel(props) {
   );
 }
 
-function PanelContent({ activePanel, isLoadingHistory, rideHistory, userPhone, userPoints, userInitials, user, profileForm, setProfileForm, handleSaveProfile, isSavingProfile }) {
+function PanelContent({ activePanel, isLoadingHistory, rideHistory, userPhone, userPoints, userInitials, user, profileForm, setProfileForm, handleSaveProfile, isSavingProfile, appSettings, setAppSettings }) {
   if (activePanel === 'rides') {
     return isLoadingHistory ? (
       <div className="flex items-center justify-center py-12"><Loader2 className="w-8 h-8 text-emerald-600 animate-spin" /></div>
@@ -670,6 +687,94 @@ function PanelContent({ activePanel, isLoadingHistory, rideHistory, userPhone, u
         <button onClick={handleSaveProfile} disabled={isSavingProfile} className="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-emerald-700 transition disabled:opacity-50">
           {isSavingProfile ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}Save Changes
         </button>
+      </div>
+    );
+  }
+
+  if (activePanel === 'settings') {
+    return (
+      <div className="space-y-6">
+        {/* App Settings */}
+        <div className="space-y-1">
+          <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">App Settings</h3>
+          
+          <button 
+            onClick={() => setAppSettings(prev => ({ ...prev, notifications: !prev.notifications }))}
+            className="w-full flex items-center justify-between p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition group"
+          >
+            <div className="flex items-center gap-3">
+              <div className={`w-9 h-9 rounded-full flex items-center justify-center shadow-sm transition-colors ${appSettings.notifications ? 'bg-purple-100 text-purple-600' : 'bg-white text-slate-400'}`}>
+                <Bell className="w-5 h-5" />
+              </div>
+              <span className="font-medium text-slate-700">Notifications</span>
+            </div>
+            <div className={`w-10 h-6 rounded-full relative transition-colors ${appSettings.notifications ? 'bg-emerald-500' : 'bg-slate-300'}`}>
+              <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow-sm transition-all ${appSettings.notifications ? 'right-1' : 'left-1'}`} />
+            </div>
+          </button>
+
+          <button 
+            onClick={() => setAppSettings(prev => ({ ...prev, darkMode: !prev.darkMode }))}
+            className="w-full flex items-center justify-between p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition group mt-2"
+          >
+            <div className="flex items-center gap-3">
+              <div className={`w-9 h-9 rounded-full flex items-center justify-center shadow-sm transition-colors ${appSettings.darkMode ? 'bg-slate-800 text-white' : 'bg-white text-slate-600'}`}>
+                <Moon className="w-5 h-5" />
+              </div>
+              <span className="font-medium text-slate-700">Dark Mode</span>
+            </div>
+            <div className={`w-10 h-6 rounded-full relative transition-colors ${appSettings.darkMode ? 'bg-emerald-500' : 'bg-slate-300'}`}>
+              <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow-sm transition-all ${appSettings.darkMode ? 'right-1' : 'left-1'}`} />
+            </div>
+          </button>
+
+          <button 
+            onClick={() => setAppSettings(prev => ({ ...prev, language: prev.language === 'English' ? 'Swahili' : 'English' }))}
+            className="w-full flex items-center justify-between p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition group mt-2"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 bg-white rounded-full flex items-center justify-center text-blue-600 shadow-sm"><Globe className="w-5 h-5" /></div>
+              <span className="font-medium text-slate-700">Language</span>
+            </div>
+            <div className="flex items-center gap-2 text-slate-500 text-sm">
+              {appSettings.language} <ChevronRight className="w-4 h-4" />
+            </div>
+          </button>
+        </div>
+
+        {/* Support & Legal */}
+        <div className="space-y-1">
+          <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Support & Legal</h3>
+          
+          <button 
+            onClick={() => window.open('#', '_blank')}
+            className="w-full flex items-center justify-between p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition group"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 bg-white rounded-full flex items-center justify-center text-emerald-600 shadow-sm"><Shield className="w-5 h-5" /></div>
+              <span className="font-medium text-slate-700">Privacy & Security</span>
+            </div>
+            <ChevronRight className="w-5 h-5 text-slate-400" />
+          </button>
+          
+          <button 
+            onClick={() => alert('Thank you for rating JiraniRide!')}
+            className="w-full flex items-center justify-between p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition group mt-2"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 bg-white rounded-full flex items-center justify-center text-orange-600 shadow-sm"><Star className="w-5 h-5" /></div>
+              <span className="font-medium text-slate-700">Rate the App</span>
+            </div>
+            <ChevronRight className="w-5 h-5 text-slate-400" />
+          </button>
+        </div>
+
+        {/* App Info */}
+        <div className="text-center pt-6 pb-2">
+          <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center mx-auto mb-3 text-emerald-600 font-bold text-xl">JR</div>
+          <h4 className="font-bold text-slate-900">JiraniRide</h4>
+          <p className="text-xs text-slate-500">Version 2.0.1 (Build 452)</p>
+        </div>
       </div>
     );
   }
