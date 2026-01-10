@@ -92,81 +92,54 @@ export default function PassengerHome() {
   const openPanel = (panel) => { setMenuOpen(false); setActivePanel(panel); if (panel === 'profile') setProfileForm({ full_name: profile?.full_name || '', phone: profile?.phone || '' }); };
 
   return (
-    <div className="h-[100dvh] w-full bg-slate-100 font-sans text-slate-900 flex flex-col lg:flex-row overflow-hidden">
+    <div className="h-[100dvh] w-full bg-white font-sans text-slate-900 flex flex-col lg:flex-row overflow-hidden">
       
-      {/* === LEFT SIDE: MAP (Desktop) / FULL SCREEN (Mobile) === */}
-      <div className="relative flex-1 lg:h-full order-1">
-        <Map 
-          center={pickupLocation ? [pickupLocation.lat, pickupLocation.lng] : defaultCenter}
-          zoom={15}
-          className="h-full w-full"
-          markers={pickupLocation ? [{ position: [pickupLocation.lat, pickupLocation.lng], popup: "You are here" }] : []}
-        />
-
-        {/* Mobile-only: Top Header */}
-        <div className="lg:hidden absolute top-0 left-0 right-0 z-20 p-3 flex justify-between items-start">
-          <button onClick={() => setMenuOpen(true)} className="bg-white p-2.5 rounded-full shadow-lg hover:bg-slate-50 transition active:scale-95">
-            <Menu className="w-5 h-5 text-slate-700" />
-          </button>
-          <div className="bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5 border border-yellow-100">
-            <Star className="w-3 h-3 text-yellow-600 fill-yellow-600" />
-            <span className="font-bold text-xs text-slate-800">{userPoints} Pts</span>
-          </div>
-        </div>
-
-        {/* Mobile-only: Bottom Sheet */}
-        <div className="lg:hidden absolute bottom-0 left-0 right-0 z-30">
-          <MobileBottomSheet 
-            bookingStep={bookingStep} setBookingStep={setBookingStep}
-            destination={destination} setDestination={setDestination}
-            selectedVehicle={selectedVehicle} setSelectedVehicle={setSelectedVehicle}
-            userName={userName} getGreeting={getGreeting} getFare={getFare}
-            handleRequestRide={handleRequestRide} handleCancelRide={handleCancelRide}
-            isRequestingRide={isRequestingRide}
-          />
-        </div>
-      </div>
-
-      {/* === RIGHT SIDE: SIDEBAR (Desktop Only) === */}
-      <div className="hidden lg:flex lg:flex-col lg:w-[420px] xl:w-[480px] h-full bg-white border-l border-slate-200 order-2">
+      {/* === MOBILE LAYOUT: Split Screen === */}
+      <div className="lg:hidden flex flex-col h-full">
         
-        {/* Header with User Info */}
-        <div className="p-6 border-b border-slate-100 bg-gradient-to-r from-emerald-600 to-emerald-700 text-white">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center text-lg font-bold">
+        {/* FIXED HEADER - Always visible on mobile */}
+        <div 
+          className="fixed top-0 left-0 right-0 z-50 px-5 py-4 lg:hidden bg-gradient-to-b from-white/90 via-white/70 to-transparent backdrop-blur-sm"
+          style={{ paddingTop: 'max(20px, env(safe-area-inset-top))' }}
+        >
+          <div className="flex justify-between items-center">
+            {/* Hamburger Menu */}
+            <button 
+              onClick={() => setMenuOpen(true)} 
+              className="bg-white p-3 rounded-2xl shadow-lg hover:bg-slate-50 transition active:scale-95 border border-slate-200/50"
+            >
+              <Menu className="w-6 h-6 text-slate-700" />
+            </button>
+            
+            {/* User Greeting + Points */}
+            <div className="bg-white px-4 py-2.5 rounded-2xl shadow-lg flex items-center gap-3 border border-slate-200/50">
+              <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-xl flex items-center justify-center text-white text-sm font-bold shadow-inner">
                 {userInitials}
               </div>
-              <div>
-                <h2 className="font-bold text-lg">{profile?.full_name || 'Guest'}</h2>
-                <p className="text-emerald-100 text-sm">{userPhone}</p>
+              <div className="flex flex-col">
+                <span className="text-xs text-slate-500">Points</span>
+                <div className="flex items-center gap-1">
+                  <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+                  <span className="font-bold text-base text-slate-800">{userPoints}</span>
+                </div>
               </div>
             </div>
-            <div className="bg-white/20 px-3 py-1.5 rounded-full flex items-center gap-1.5">
-              <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-              <span className="font-bold text-sm">{userPoints} Pts</span>
-            </div>
-          </div>
-          
-          {/* Quick Actions */}
-          <div className="flex gap-2">
-            <QuickAction icon={History} label="Rides" onClick={() => openPanel('rides')} />
-            <QuickAction icon={CreditCard} label="Pay" onClick={() => openPanel('payment')} />
-            <QuickAction icon={Gift} label="Rewards" onClick={() => openPanel('loyalty')} />
-            <QuickAction icon={User} label="Profile" onClick={() => openPanel('profile')} />
           </div>
         </div>
-
-        {/* Booking Panel */}
-        <div className="flex-1 overflow-y-auto p-6">
-          {activePanel ? (
-            <DesktopPanel activePanel={activePanel} setActivePanel={setActivePanel}
-              isLoadingHistory={isLoadingHistory} rideHistory={rideHistory}
-              userPhone={userPhone} userPoints={userPoints} userInitials={userInitials}
-              user={user} profileForm={profileForm} setProfileForm={setProfileForm}
-              handleSaveProfile={handleSaveProfile} isSavingProfile={isSavingProfile}
-            />
-          ) : (
+        
+        {/* TOP HALF: Map (with padding for fixed header) */}
+        <div className="relative h-[40vh] flex-shrink-0 mt-20">
+          <Map 
+            center={pickupLocation ? [pickupLocation.lat, pickupLocation.lng] : defaultCenter}
+            zoom={15}
+            className="h-full w-full"
+            markers={pickupLocation ? [{ position: [pickupLocation.lat, pickupLocation.lng], popup: "You are here" }] : []}
+          />
+        </div>
+        
+        {/* BOTTOM HALF: Booking Content */}
+        <div className="flex-1 bg-white overflow-y-auto">
+          <div className="p-5">
             <BookingPanel 
               bookingStep={bookingStep} setBookingStep={setBookingStep}
               destination={destination} setDestination={setDestination}
@@ -175,22 +148,90 @@ export default function PassengerHome() {
               handleRequestRide={handleRequestRide} handleCancelRide={handleCancelRide}
               isRequestingRide={isRequestingRide}
             />
-          )}
+          </div>
+          {/* Safe area for iOS */}
+          <div className="h-[env(safe-area-inset-bottom)]" />
         </div>
+      </div>
 
-        {/* Footer */}
-        <div className="p-4 border-t border-slate-100 bg-slate-50">
-          <button onClick={handleLogout} className="w-full flex items-center justify-center gap-2 p-3 text-red-600 hover:bg-red-50 rounded-xl transition font-medium">
-            <LogOut className="w-4 h-4" />
-            Log Out
-          </button>
+      {/* === DESKTOP LAYOUT: Side by Side === */}
+      <div className="hidden lg:flex lg:flex-row w-full h-full">
+        
+        {/* LEFT: Map */}
+        <div className="flex-1 relative">
+          <Map 
+            center={pickupLocation ? [pickupLocation.lat, pickupLocation.lng] : defaultCenter}
+            zoom={15}
+            className="h-full w-full"
+            markers={pickupLocation ? [{ position: [pickupLocation.lat, pickupLocation.lng], popup: "You are here" }] : []}
+          />
+        </div>
+        
+        {/* RIGHT: Sidebar */}
+        <div className="w-[420px] xl:w-[480px] h-full bg-white border-l border-slate-200 flex flex-col">
+          
+          {/* Header with User Info */}
+          <div className="p-6 border-b border-slate-100 bg-gradient-to-r from-emerald-600 to-emerald-700 text-white">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center text-lg font-bold">
+                  {userInitials}
+                </div>
+                <div>
+                  <h2 className="font-bold text-lg">{profile?.full_name || 'Guest'}</h2>
+                  <p className="text-emerald-100 text-sm">{userPhone}</p>
+                </div>
+              </div>
+              <div className="bg-white/20 px-3 py-1.5 rounded-full flex items-center gap-1.5">
+                <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+                <span className="font-bold text-sm">{userPoints} Pts</span>
+              </div>
+            </div>
+            
+            {/* Quick Actions */}
+            <div className="flex gap-2">
+              <QuickAction icon={History} label="Rides" onClick={() => openPanel('rides')} />
+              <QuickAction icon={CreditCard} label="Pay" onClick={() => openPanel('payment')} />
+              <QuickAction icon={Gift} label="Rewards" onClick={() => openPanel('loyalty')} />
+              <QuickAction icon={User} label="Profile" onClick={() => openPanel('profile')} />
+            </div>
+          </div>
+
+          {/* Booking Panel */}
+          <div className="flex-1 overflow-y-auto p-6">
+            {activePanel ? (
+              <DesktopPanel activePanel={activePanel} setActivePanel={setActivePanel}
+                isLoadingHistory={isLoadingHistory} rideHistory={rideHistory}
+                userPhone={userPhone} userPoints={userPoints} userInitials={userInitials}
+                user={user} profileForm={profileForm} setProfileForm={setProfileForm}
+                handleSaveProfile={handleSaveProfile} isSavingProfile={isSavingProfile}
+              />
+            ) : (
+              <BookingPanel 
+                bookingStep={bookingStep} setBookingStep={setBookingStep}
+                destination={destination} setDestination={setDestination}
+                selectedVehicle={selectedVehicle} setSelectedVehicle={setSelectedVehicle}
+                userName={userName} getGreeting={getGreeting} getFare={getFare}
+                handleRequestRide={handleRequestRide} handleCancelRide={handleCancelRide}
+                isRequestingRide={isRequestingRide}
+              />
+            )}
+          </div>
+
+          {/* Footer */}
+          <div className="p-4 border-t border-slate-100 bg-slate-50">
+            <button onClick={handleLogout} className="w-full flex items-center justify-center gap-2 p-3 text-red-600 hover:bg-red-50 rounded-xl transition font-medium">
+              <LogOut className="w-4 h-4" />
+              Log Out
+            </button>
+          </div>
         </div>
       </div>
 
       {/* === MOBILE SIDEBAR DRAWER === */}
-      {menuOpen && <div className="lg:hidden fixed inset-0 bg-black/50 z-40 backdrop-blur-sm" onClick={() => setMenuOpen(false)} />}
+      {menuOpen && <div className="lg:hidden fixed inset-0 bg-black/50 z-[55] backdrop-blur-sm" onClick={() => setMenuOpen(false)} />}
       
-      <div className={`lg:hidden fixed top-0 left-0 h-full w-[80%] max-w-[280px] bg-white z-50 shadow-2xl transform transition-transform duration-300 ${menuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <div className={`lg:hidden fixed top-0 left-0 h-full w-[80%] max-w-[280px] bg-white z-[60] shadow-2xl transform transition-transform duration-300 ${menuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="p-4 bg-emerald-600 text-white relative">
           <button onClick={() => setMenuOpen(false)} className="absolute top-3 right-3 p-1 text-white/80 hover:text-white"><X className="w-5 h-5" /></button>
           <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center mb-3 text-xl font-bold">{userInitials}</div>
@@ -211,7 +252,7 @@ export default function PassengerHome() {
 
       {/* === MOBILE PANEL OVERLAYS === */}
       {activePanel && (
-        <div className="lg:hidden fixed inset-0 z-50 bg-white overflow-y-auto">
+        <div className="lg:hidden fixed inset-0 z-[60] bg-white overflow-y-auto">
           <div className="sticky top-0 bg-white border-b border-slate-100 p-4 flex items-center gap-4">
             <button onClick={() => setActivePanel(null)} className="p-2 -ml-2 hover:bg-slate-100 rounded-full transition"><ArrowLeft className="w-5 h-5 text-slate-700" /></button>
             <h2 className="text-lg font-bold text-slate-900">{activePanel === 'rides' ? 'Your Rides' : activePanel === 'payment' ? 'Payment Methods' : activePanel === 'loyalty' ? 'Loyalty Rewards' : 'Profile Settings'}</h2>
@@ -244,15 +285,57 @@ function BookingPanel({ bookingStep, setBookingStep, destination, setDestination
   if (bookingStep === 'idle') {
     return (
       <div>
-        <h3 className="text-xl font-bold mb-4 text-slate-800">{getGreeting()}, {userName}!</h3>
-        <div onClick={() => setBookingStep('selecting')} className="bg-slate-100 p-4 rounded-xl flex items-center gap-4 mb-6 cursor-pointer hover:bg-slate-200 transition">
-          <div className="w-10 h-10 bg-slate-300 rounded-full flex items-center justify-center"><Navigation className="w-5 h-5 text-slate-600" /></div>
-          <div className="text-lg font-semibold text-slate-900">Where to?</div>
+        {/* Where to? Search Box */}
+        <div 
+          onClick={() => setBookingStep('selecting')} 
+          className="bg-slate-100 p-4 rounded-xl flex items-center gap-4 mb-6 cursor-pointer hover:bg-slate-200 transition active:scale-[0.99]"
+        >
+          <div className="w-10 h-10 bg-slate-300 rounded-full flex items-center justify-center">
+            <MapPin className="w-5 h-5 text-slate-600" />
+          </div>
+          <div className="flex-1">
+            <div className="text-lg font-semibold text-slate-900">Where to?</div>
+          </div>
+          <div className="text-slate-400">
+            <Navigation className="w-5 h-5" />
+          </div>
         </div>
-        <h4 className="text-sm font-medium text-slate-500 mb-3">Recent Places</h4>
-        <div className="flex items-center gap-4 p-3 hover:bg-slate-50 rounded-xl cursor-pointer transition">
-          <div className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center"><History className="w-5 h-5 text-slate-500" /></div>
-          <div><div className="font-semibold text-slate-900">Jkuat Main Gate</div><div className="text-xs text-slate-500">Juja, Kiambu</div></div>
+        
+        {/* Quick Action Shortcuts - Uber Style */}
+        <div className="grid grid-cols-3 gap-3 mb-6">
+          <button className="bg-slate-50 p-4 rounded-2xl flex flex-col items-center gap-2 active:scale-95 transition">
+            <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+              <MapPin className="w-6 h-6 text-blue-600" />
+            </div>
+            <span className="text-sm font-medium text-slate-700">Home</span>
+          </button>
+          <button className="bg-slate-50 p-4 rounded-2xl flex flex-col items-center gap-2 active:scale-95 transition">
+            <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
+              <MapPin className="w-6 h-6 text-purple-600" />
+            </div>
+            <span className="text-sm font-medium text-slate-700">Work</span>
+          </button>
+          <button className="bg-slate-50 p-4 rounded-2xl flex flex-col items-center gap-2 active:scale-95 transition">
+            <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
+              <Star className="w-6 h-6 text-emerald-600" />
+            </div>
+            <span className="text-sm font-medium text-slate-700">Saved</span>
+          </button>
+        </div>
+        
+        {/* Recent Rides */}
+        <h4 className="text-sm font-bold text-slate-500 mb-3 uppercase tracking-wide">Recent</h4>
+        <div className="space-y-2">
+          <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-xl cursor-pointer transition active:scale-[0.99]">
+            <div className="w-10 h-10 bg-slate-200 rounded-full flex items-center justify-center">
+              <History className="w-5 h-5 text-slate-500" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="font-semibold text-slate-900 truncate">Jkuat Main Gate</div>
+              <div className="text-sm text-slate-500">Juja, Kiambu</div>
+            </div>
+            <Navigation className="w-4 h-4 text-slate-400 flex-shrink-0" />
+          </div>
         </div>
       </div>
     );
@@ -277,18 +360,36 @@ function BookingPanel({ bookingStep, setBookingStep, destination, setDestination
     return (
       <div>
         <div className="text-center mb-6">
-          <div className="inline-flex items-center gap-2 bg-emerald-100 text-emerald-700 px-3 py-1.5 rounded-full text-sm font-medium mb-3"><div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />Driver on the way</div>
-          <h3 className="text-xl font-bold text-slate-800">Your ride is arriving!</h3>
+          <div className="inline-flex items-center gap-2 bg-emerald-100 text-emerald-700 px-4 py-2 rounded-full text-sm font-medium mb-3">
+            <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+            Driver on the way
+          </div>
+          <h3 className="text-xl sm:text-2xl font-bold text-slate-800">Your ride is arriving!</h3>
         </div>
-        <div className="bg-slate-50 p-4 rounded-xl mb-6">
+        <div className="bg-slate-50 p-5 rounded-2xl mb-6">
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 bg-emerald-600 rounded-full flex items-center justify-center text-white text-2xl font-bold">JK</div>
-            <div className="flex-1"><h4 className="font-bold text-slate-900 text-lg">John Kamau</h4><p className="text-sm text-slate-500">Honda CB 125 • KDB 123X</p><div className="flex items-center gap-1 mt-1"><Star className="w-4 h-4 text-yellow-500 fill-yellow-500" /><span className="text-sm font-medium">4.8</span></div></div>
-            <button className="w-12 h-12 bg-emerald-600 rounded-full flex items-center justify-center text-white hover:bg-emerald-700 transition"><Phone className="w-5 h-5" /></button>
+            <div className="w-18 h-18 bg-emerald-600 rounded-full flex items-center justify-center text-white text-2xl font-bold">JK</div>
+            <div className="flex-1">
+              <h4 className="font-bold text-slate-900 text-lg">John Kamau</h4>
+              <p className="text-sm text-slate-500">Honda CB 125 • KDB 123X</p>
+              <div className="flex items-center gap-1 mt-1.5">
+                <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+                <span className="text-sm font-medium">4.8</span>
+                <span className="text-xs text-slate-400 ml-1">(256 trips)</span>
+              </div>
+            </div>
+            <button className="w-14 h-14 bg-emerald-600 rounded-full flex items-center justify-center text-white hover:bg-emerald-700 transition active:scale-95 shadow-lg">
+              <Phone className="w-6 h-6" />
+            </button>
           </div>
         </div>
-        <div className="flex items-center justify-between text-sm mb-4"><span className="text-slate-500">Estimated fare</span><span className="font-bold text-slate-900">KES {getFare(selectedVehicle)}</span></div>
-        <button onClick={handleCancelRide} className="w-full py-3 border-2 border-red-200 text-red-600 rounded-xl font-medium hover:bg-red-50 transition">Cancel Ride</button>
+        <div className="flex items-center justify-between text-base mb-5 px-1">
+          <span className="text-slate-500">Estimated fare</span>
+          <span className="font-bold text-slate-900 text-lg">KES {getFare(selectedVehicle)}</span>
+        </div>
+        <button onClick={handleCancelRide} className="w-full py-4 border-2 border-red-200 text-red-600 rounded-2xl font-bold hover:bg-red-50 transition active:scale-[0.98]">
+          Cancel Ride
+        </button>
       </div>
     );
   }
@@ -297,11 +398,16 @@ function BookingPanel({ bookingStep, setBookingStep, destination, setDestination
 
 function MobileBottomSheet(props) {
   return (
-    <div className="bg-white rounded-t-2xl shadow-[0_-10px_40px_rgba(0,0,0,0.1)] max-h-[70vh] overflow-y-auto">
-      <div className="p-4 pb-6">
-        <div className="w-10 h-1 bg-slate-200 rounded-full mx-auto mb-4" />
+    <div className="bg-white rounded-t-3xl shadow-[0_-10px_50px_rgba(0,0,0,0.15)] max-h-[75vh] overflow-y-auto">
+      {/* Enhanced grab handle */}
+      <div className="sticky top-0 bg-white pt-3 pb-2 z-10">
+        <div className="w-12 h-1.5 bg-slate-300 rounded-full mx-auto" />
+      </div>
+      <div className="px-5 pb-8">
         <BookingPanel {...props} />
       </div>
+      {/* Safe area for iOS home indicator */}
+      <div className="h-[env(safe-area-inset-bottom)]" />
     </div>
   );
 }
@@ -582,15 +688,29 @@ function MenuItem({ icon: Icon, label, subtitle, badge, onClick }) {
 
 function VehicleOption({ name, price, time, icon: Icon, selected, onClick, shared }) {
   return (
-    <div onClick={onClick} className={`flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer transition-all ${selected ? 'border-emerald-600 bg-emerald-50/50 shadow-sm' : 'border-transparent bg-slate-50 hover:bg-slate-100'}`}>
+    <div 
+      onClick={onClick} 
+      className={`flex items-center justify-between p-5 rounded-2xl border-2 cursor-pointer transition-all active:scale-[0.98] ${
+        selected 
+          ? 'border-emerald-600 bg-emerald-50/50 shadow-md shadow-emerald-100' 
+          : 'border-transparent bg-slate-50 hover:bg-slate-100 active:bg-slate-200'
+      }`}
+    >
       <div className="flex items-center gap-4">
-        <div className={`w-14 h-14 rounded-full flex items-center justify-center ${selected ? 'bg-white text-emerald-600' : 'bg-slate-200 text-slate-500'}`}><Icon className="w-7 h-7" /></div>
-        <div><div className="font-bold text-slate-900">{name}</div><div className="text-xs text-slate-500">{time} away</div></div>
+        <div className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center shadow-sm ${
+          selected ? 'bg-white text-emerald-600' : 'bg-slate-200 text-slate-500'
+        }`}>
+          <Icon className="w-7 h-7 sm:w-8 sm:h-8" />
+        </div>
+        <div>
+          <div className="font-bold text-slate-900 text-base sm:text-lg">{name}</div>
+          <div className="text-sm text-slate-500">{time} away</div>
+        </div>
       </div>
       <div className="text-right">
-        <div className="font-bold text-lg text-slate-900">KES {price}</div>
-        {shared && selected && <div className="text-[10px] text-purple-600 font-bold">40% OFF</div>}
-        {!shared && selected && <div className="text-[10px] text-emerald-600 font-bold">BEST VALUE</div>}
+        <div className="font-bold text-xl text-slate-900">KES {price}</div>
+        {shared && selected && <div className="text-xs text-purple-600 font-bold mt-1">40% OFF</div>}
+        {!shared && selected && <div className="text-xs text-emerald-600 font-bold mt-1">BEST VALUE</div>}
       </div>
     </div>
   );

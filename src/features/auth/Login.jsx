@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
-import { supabase } from '../../services/supabase';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 
@@ -17,43 +16,24 @@ export default function Login() {
     setError('');
     setIsLoading(true);
 
-    const { error: signInError, data } = await signIn(formData);
+    try {
+      const { error: signInError, data } = await signIn(formData);
 
-    if (signInError) {
-      setError(signInError.message || 'Failed to sign in');
+      if (signInError) {
+        setError(signInError.message || 'Failed to sign in');
+        setIsLoading(false);
+        return;
+      }
+
+      // Successfully signed in - navigate immediately to passenger page
+      // The auth state change will handle loading the profile in background
       setIsLoading(false);
-      return;
-    }
-
-    // Fetch the user's profile to determine their role
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', data.user.id)
-      .single();
-
-    setIsLoading(false);
-
-    if (profileError || !profile) {
-      // Default to passenger if profile not found
-      console.log('No profile found, defaulting to passenger');
       navigate('/passenger');
-      return;
-    }
-
-    // Redirect based on role
-    console.log('Redirecting to dashboard for role:', profile.role);
-    switch (profile.role) {
-      case 'admin':
-        navigate('/admin');
-        break;
-      case 'driver':
-        navigate('/driver');
-        break;
-      case 'passenger':
-      default:
-        navigate('/passenger');
-        break;
+      
+    } catch (err) {
+      console.error('Login error:', err);
+      setError(err.message || 'An error occurred during login');
+      setIsLoading(false);
     }
   };
 

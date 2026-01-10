@@ -1,6 +1,9 @@
 import { create } from "zustand";
 import { supabase } from "../services/supabase";
 
+// Store the auth subscription so we can manage it
+let authSubscription = null;
+
 export const useAuthStore = create((set, get) => ({
   user: null,
   profile: null,
@@ -34,69 +37,116 @@ export const useAuthStore = create((set, get) => ({
         set({ user: null, profile: null, loading: false });
       }
 
+      // Unsubscribe from previous listener if exists
+      if (authSubscription) {
+        authSubscription.unsubscribe();
+      }
+
       // Listen for changes
-      supabase.auth.onAuthStateChange(async (_event, session) => {
+      const {
+        data: { subscription },
+      } = supabase.auth.onAuthStateChange(async (_event, session) => {
         if (session?.user) {
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("*")
-            .eq("id", session.user.id)
-            .single();
-          set({ user: session.user, profile: profile || null, loading: false });
+          try {
+            const { data: profile } = await supabase
+              .from("profiles")
+              .select("*")
+              .eq("id", session.user.id)
+              .single();
+            set({
+              user: session.user,
+              profile: profile || null,
+              loading: false,
+            });
+          } catch (err) {
+            // Ignore abort errors during rapid state changes
+            if (err.name !== "AbortError") {
+              console.error("Profile fetch error:", err);
+            }
+            set({ user: session.user, profile: null, loading: false });
+          }
         } else {
           set({ user: null, profile: null, loading: false });
         }
       });
+
+      authSubscription = subscription;
     } catch (err) {
-      set({ error: err.message, loading: false });
+      // Ignore abort errors
+      if (err.name !== "AbortError") {
+        set({ error: err.message, loading: false });
+      }
     }
   },
 
   signIn: async ({ email, password }) => {
     set({ loading: true, error: null });
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-    if (error) {
-      set({ error: error.message, loading: false });
-      return { error };
+      if (error) {
+        set({ error: error.message, loading: false });
+        return { error };
+      }
+
+      return { data };
+    } catch (err) {
+      if (err.name !== "AbortError") {
+        set({ error: err.message, loading: false });
+        return { error: err };
+      }
+      return { error: err };
     }
-
-    return { data };
   },
 
   signUp: async ({ email, password, fullName, phone, role }) => {
     set({ loading: true, error: null });
-    // 1. Sign up auth user
-    const { data: authData, error: authError } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          full_name: fullName,
-          phone: phone,
-          role: role,
+    try {
+      // 1. Sign up auth user
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: fullName,
+            phone: phone,
+            role: role,
+          },
         },
-      },
-    });
+      });
 
-    if (authError) {
-      set({ error: authError.message, loading: false });
-      return { error: authError };
+      if (authError) {
+        set({ error: authError.message, loading: false });
+        return { error: authError };
+      }
+
+      // 2. We depend on a Supabase Trigger to create the profile usually,
+      // but we can optimistic update or handle additional logic here if needed.
+      // For now, assume trigger handles public.profiles creation.
+
+      set({ loading: false });
+      return { data: authData };
+    } catch (err) {
+      if (err.name !== "AbortError") {
+        set({ error: err.message, loading: false });
+      }
+      return { error: err };
     }
-
-    // 2. We depend on a Supabase Trigger to create the profile usually,
-    // but we can optimistic update or handle additional logic here if needed.
-    // For now, assume trigger handles public.profiles creation.
-
-    set({ loading: false });
-    return { data: authData };
   },
 
   signOut: async () => {
-    await supabase.auth.signOut();
-    set({ user: null, profile: null });
+    try {
+      await supabase.auth.signOut();
+      set({ user: null, profile: null });
+    } catch (err) {
+      // Ignore abort errors during sign out
+      if (err.name !== "AbortError") {
+        console.error("Sign out error:", err);
+      }
+      set({ user: null, profile: null });
+    }
   },
 }));
