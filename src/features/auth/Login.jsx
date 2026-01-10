@@ -36,11 +36,13 @@ export default function Login() {
 
     if (profileError || !profile) {
       // Default to passenger if profile not found
+      console.log('No profile found, defaulting to passenger');
       navigate('/passenger');
       return;
     }
 
     // Redirect based on role
+    console.log('Redirecting to dashboard for role:', profile.role);
     switch (profile.role) {
       case 'admin':
         navigate('/admin');
