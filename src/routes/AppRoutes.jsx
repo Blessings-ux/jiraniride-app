@@ -5,7 +5,7 @@ import Login from '../features/auth/Login';
 import Signup from '../features/auth/Signup';
 import LandingPage from '../features/landing/LandingPage';
 import PassengerHome from '../features/passenger/PassengerHome';
-import DriverDashboard from '../features/driver/Dashboard';
+import DriverDashboard from '../features/driver/DriverDashboard';
 import AdminDashboard from '../features/admin/Dashboard';
 import ProtectedRoute from '../components/ProtectedRoute';
 
@@ -20,21 +20,21 @@ const AppRoutes = () => {
         <Route path="/signup" element={<Signup />} />
       </Route>
       
-      {/* Passenger Route - Full Screen (No AppLayout) */}
+      {/* Full Screen Routes (Passenger & Driver) */}
       <Route path="/passenger" element={
         <ProtectedRoute allowedRoles={['passenger']}>
           <PassengerHome />
         </ProtectedRoute>
       } />
       
-      {/* Protected Routes with AppLayout */}
+      <Route path="/driver" element={
+        <ProtectedRoute allowedRoles={['driver']}>
+          <DriverDashboard />
+        </ProtectedRoute>
+      } />
+      
+      {/* Protected Routes with AppLayout (Admin) */}
       <Route element={<AppLayout />}>
-        <Route path="/driver" element={
-          <ProtectedRoute allowedRoles={['driver']}>
-            <DriverDashboard />
-          </ProtectedRoute>
-        } />
-        
         <Route path="/admin" element={
           <ProtectedRoute allowedRoles={['admin']}>
             <AdminDashboard />
