@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
+import { supabase } from '../../services/supabase';
 
 export default function Signup() {
   const navigate = useNavigate();
@@ -23,7 +24,33 @@ export default function Signup() {
     setError('');
     setIsLoading(true);
 
-    const { error: signUpError, data } = await signUp(formData);
+    // Trim inputs
+    const trimmedData = {
+      ...formData,
+      fullName: formData.fullName.trim(),
+      email: formData.email.trim(),
+      phone: formData.phone.trim(),
+    };
+
+    // 1. Check if phone number already exists in profiles (to prevent 500 error)
+    try {
+      const { data: existingPhone } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('phone', trimmedData.phone)
+        .maybeSingle();
+
+      if (existingPhone) {
+        setError('This phone number is already registered.');
+        setIsLoading(false);
+        return;
+      }
+    } catch (checkErr) {
+      console.error('Phone check failed:', checkErr);
+      // Continue anyway, maybe it's fine
+    }
+
+    const { error: signUpError, data } = await signUp(trimmedData);
 
     if (signUpError) {
       setError(signUpError.message || 'Failed to sign up');
