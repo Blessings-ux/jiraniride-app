@@ -56,46 +56,121 @@ export default function DriverDashboard() {
   const completeRide = () => { setEarnings(prev => prev + activeRide.fare); setActiveRide(null); };
 
   return (
-    <div className="h-[100dvh] w-full bg-white font-sans text-slate-900 flex flex-col overflow-hidden">
+    <div className="h-[100dvh] w-full bg-white font-sans text-slate-900 flex flex-col lg:flex-row overflow-hidden">
       
-      {/* --- FIXED HEADER (Passenger Style) --- */}
-      <div 
-        className="fixed top-0 left-0 right-0 z-50 px-5 py-4 bg-gradient-to-b from-white/90 via-white/70 to-transparent backdrop-blur-sm"
-        style={{ paddingTop: 'max(20px, env(safe-area-inset-top))' }}
-      >
-        <div className="flex justify-between items-center">
-          {/* Earnings Badge (Styled like Passenger Points) */}
-          <div className="bg-white px-4 py-2.5 rounded-2xl shadow-lg flex items-center gap-3 border border-slate-200/50">
-            <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-xl flex items-center justify-center text-white shadow-inner">
-              <span className="text-[10px] font-bold">KES</span>
+      {/* =========================================================================
+          #1. MOBILE LAYOUT (lg:hidden)
+          - Original Mobile-First Design
+          - Fixed Header + Split Screen
+      ========================================================================= */}
+      <div className="lg:hidden flex flex-col h-full w-full">
+        {/* Fixed Header */}
+        <div 
+          className="fixed top-0 left-0 right-0 z-50 px-5 py-4 bg-gradient-to-b from-white/90 via-white/70 to-transparent backdrop-blur-sm"
+          style={{ paddingTop: 'max(20px, env(safe-area-inset-top))' }}
+        >
+          <div className="flex justify-between items-center">
+            <div className="bg-white px-4 py-2.5 rounded-2xl shadow-lg flex items-center gap-3 border border-slate-200/50">
+              <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-xl flex items-center justify-center text-white shadow-inner">
+                <span className="text-[10px] font-bold">KES</span>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-xs text-slate-500">Today</span>
+                <span className="font-bold text-base text-slate-800">KES {earnings}</span>
+              </div>
             </div>
-            <div className="flex flex-col">
-              <span className="text-xs text-slate-500">Today</span>
-              <span className="font-bold text-base text-slate-800">KES {earnings}</span>
-            </div>
+            <button 
+              onClick={() => setShowSettings(true)}
+              className="bg-white p-3 rounded-2xl shadow-lg hover:bg-slate-50 transition active:scale-95 border border-slate-200/50 text-slate-700"
+            >
+              <Settings className="w-6 h-6" />
+            </button>
           </div>
+        </div>
 
-          {/* Settings Button */}
-          <button 
-            onClick={() => setShowSettings(true)}
-            className="bg-white p-3 rounded-2xl shadow-lg hover:bg-slate-50 transition active:scale-95 border border-slate-200/50 text-slate-700"
-          >
-            <Settings className="w-6 h-6" />
-          </button>
+        {/* Map Top */}
+        <div className="relative h-[45vh] flex-shrink-0 mt-20">
+          <DriverMap activeRide={activeRide} /> 
+        </div>
+
+        {/* Content Bottom */}
+        <div className="flex-1 bg-white rounded-t-3xl -mt-6 z-10 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] overflow-y-auto relative">
+          <div className="w-12 h-1.5 bg-slate-300 rounded-full mx-auto my-3" />
+          <div className="p-5 pb-8 space-y-6">
+            <DashboardContent 
+              isOnline={isOnline} handleGoOnline={handleGoOnline}
+              handleGoOffline={handleGoOffline} incomingRequest={incomingRequest}
+              setIncomingRequest={setIncomingRequest} acceptRide={acceptRide}
+              activeRide={activeRide} completeRide={completeRide}
+            />
+          </div>
         </div>
       </div>
 
-      {/* --- SETTINGS OVERLAY --- */}
+      {/* =========================================================================
+          #2. DESKTOP LAYOUT (hidden lg:flex)
+          - Side-by-Side: Map Left (Flex-1) | Sidebar Right (Fixed Width)
+      ========================================================================= */}
+      <div className="hidden lg:flex flex-row w-full h-full">
+        
+        {/* LEFT: Map Area */}
+        <div className="flex-1 relative h-full">
+          <DriverMap activeRide={activeRide} />
+        </div>
+
+        {/* RIGHT: Sidebar */}
+        <div className="w-[450px] bg-slate-50 h-full border-l border-slate-200 flex flex-col z-20 shadow-2xl">
+          
+          {/* Desktop Header */}
+          <div className="p-6 bg-white border-b border-slate-100 shadow-sm z-10">
+            <div className="flex items-center justify-between mb-6">
+              <h1 className="text-2xl font-bold text-slate-800">Driver Dashboard</h1>
+              <button 
+                onClick={() => setShowSettings(true)}
+                className="p-2 hover:bg-slate-100 rounded-xl transition text-slate-600"
+              >
+                <Settings className="w-6 h-6" />
+              </button>
+            </div>
+            
+            {/* Earnings Card Desktop */}
+            <div className="bg-gradient-to-br from-emerald-600 to-emerald-800 rounded-2xl p-5 text-white shadow-lg shadow-emerald-200/50">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center text-xs font-bold ring-2 ring-white/10">
+                  KES
+                </div>
+                <div>
+                  <div className="text-emerald-100 text-sm font-medium">Total Earnings Today</div>
+                  <div className="text-3xl font-bold">KES {earnings}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Scrollable Content */}
+          <div className="flex-1 overflow-y-auto p-6 space-y-8">
+            <DashboardContent 
+              isOnline={isOnline} handleGoOnline={handleGoOnline}
+              handleGoOffline={handleGoOffline} incomingRequest={incomingRequest}
+              setIncomingRequest={setIncomingRequest} acceptRide={acceptRide}
+              activeRide={activeRide} completeRide={completeRide}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* --- SETTINGS OVERLAY (Shared) --- */}
       {showSettings && (
         <div className="fixed inset-0 z-[2000] bg-white overflow-y-auto animate-in slide-in-from-right duration-300">
-          <div className="sticky top-0 z-10 bg-white border-b border-slate-100 p-4 flex items-center gap-4" style={{ paddingTop: 'max(16px, env(safe-area-inset-top))' }}>
+             {/* ... Same Settings Content ... */}
+             <div className="sticky top-0 z-10 bg-white border-b border-slate-100 p-4 flex items-center gap-4" style={{ paddingTop: 'max(16px, env(safe-area-inset-top))' }}>
             <button onClick={() => setShowSettings(false)} className="p-2 -ml-2 hover:bg-slate-100 rounded-full transition active:scale-95">
               <ArrowLeft className="w-6 h-6 text-slate-700" />
             </button>
             <h2 className="text-lg font-bold text-slate-900">Settings</h2>
           </div>
           
-          <div className="p-5 space-y-6">
+          <div className="p-5 space-y-6 max-w-2xl mx-auto">
             {/* App Settings */}
             <div className="space-y-1">
               <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">App Settings</h3>
@@ -174,171 +249,192 @@ export default function DriverDashboard() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
 
-      {/* --- TOP HALF: MAP --- */}
-      <div className="relative h-[45vh] flex-shrink-0 mt-20">
-        <iframe 
-          width="100%" height="100%" frameBorder="0" 
-          src="https://www.openstreetmap.org/export/embed.html?bbox=36.7%2C-1.3%2C37.1%2C-1.1&layer=mapnik" 
-          className="w-full h-full opacity-80"
-        ></iframe>
-        
-        {/* Navigation Overlay (when active) */}
-        {activeRide && (
-          <div className="absolute top-4 left-4 right-4 bg-emerald-600/90 backdrop-blur text-white p-4 rounded-xl shadow-lg flex items-center gap-4 animate-in fade-in slide-in-from-top-4">
-             <Navigation className="w-8 h-8" />
-             <div>
-               <div className="text-xs text-emerald-100 uppercase font-bold tracking-wider">Next Turn</div>
-               <div className="font-bold text-lg">Turn Right in 200m</div>
+// ... (imports remain the same)
+// SUB-COMPONENTS - REFACTORED FOR "UBER-LIKE" PROFESSIONALISM
+
+function DriverMap({ activeRide }) {
+  return (
+    <div className="relative w-full h-full bg-slate-100">
+      <iframe 
+        width="100%" height="100%" frameBorder="0" 
+        src="https://www.openstreetmap.org/export/embed.html?bbox=36.7%2C-1.3%2C37.1%2C-1.1&layer=mapnik" 
+        className="w-full h-full opacity-100 mix-blend-multiply grayscale-[0.3]" // subtle map style
+      ></iframe>
+      
+      {/* Navigation Overlay - Clean Green Banner */}
+      {activeRide && (
+        <div className="absolute top-4 left-4 right-4 md:left-auto md:right-4 md:w-96 bg-emerald-700 text-white p-4 shadow-xl z-20 rounded-none md:rounded-lg">
+            <div className="flex items-start gap-4">
+              <Navigation className="w-10 h-10 mt-1 opacity-90" />
+              <div>
+                <div className="text-emerald-100 font-medium text-sm">200m</div>
+                <div className="font-bold text-2xl leading-tight">Turn Right onto Kimathi St</div>
+              </div>
+            </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function DashboardContent({ isOnline, handleGoOnline, handleGoOffline, incomingRequest, setIncomingRequest, acceptRide, activeRide, completeRide }) {
+  return (
+    <>
+      {/* 1. OFFLINE STATE - THE "GO" BUTTON */}
+      {!isOnline && (
+        <div className="flex flex-col items-center justify-center h-full min-h-[40vh]">
+          <button 
+            onClick={handleGoOnline}
+            className="group relative w-32 h-32 md:w-40 md:h-40 rounded-full bg-blue-600 hover:bg-blue-700 active:scale-95 transition-all duration-300 shadow-2xl shadow-blue-300 flex items-center justify-center mb-6"
+          >
+             <div className="absolute inset-0 rounded-full border-4 border-blue-400 opacity-30 group-hover:scale-110 transition-transform duration-500"></div>
+             <span className="font-bold text-3xl md:text-4xl text-white tracking-widest">GO</span>
+          </button>
+          <h2 className="text-xl font-bold text-slate-800">You are Offline</h2>
+          <p className="text-slate-500 text-sm mt-1">Go online to receive trips</p>
+        </div>
+      )}
+
+      {/* 2. ONLINE / SEARCHING - MINIMAL STATUS */}
+      {isOnline && !incomingRequest && !activeRide && (
+        <div className="flex flex-col items-center justify-center h-full py-10">
+          <div className="relative mb-6">
+            <span className="absolute inset-0 rounded-full bg-blue-100 animate-ping opacity-75 duration-1000"></span>
+            <div className="w-16 h-16 bg-white border-4 border-blue-500 rounded-full flex items-center justify-center shadow-lg relative z-10">
+               <div className="w-3 h-3 bg-blue-600 rounded-full"></div>
+            </div>
+          </div>
+          <h3 className="text-lg font-bold text-slate-800">Finding Trips...</h3>
+          <p className="text-slate-400 text-sm mb-8">You're visible to passengers nearby</p>
+          
+          <button 
+            onClick={handleGoOffline}
+            className="flex items-center gap-2 px-6 py-3 rounded-full bg-slate-100 text-slate-600 font-bold hover:bg-slate-200 transition text-sm uppercase tracking-wide"
+          >
+            <Power className="w-4 h-4" /> Go Offline
+          </button>
+        </div>
+      )}
+
+      {/* 3. INCOMING REQUEST - HIGH CONTRAST CARD */}
+      {incomingRequest && (
+        <div className="animate-in slide-in-from-bottom duration-300 h-full flex flex-col">
+          <div className="flex-1">
+             {/* Header */}
+             <div className="flex items-center justify-between mb-8">
+                <div className="bg-black text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
+                  {incomingRequest.paymentMethod}
+                </div>
+                <div className="text-slate-500 text-sm font-medium">3 mins away</div>
+             </div>
+             
+             {/* Fare */}
+             <div className="text-center mb-10">
+                <div className="text-5xl md:text-6xl font-black text-slate-900 tracking-tight">
+                  <span className="text-2xl font-bold text-slate-400 align-top mr-1">KES</span>
+                  {incomingRequest.fare}
+                </div>
+                <div className="text-green-600 font-bold text-sm mt-1 uppercase tracking-wide">Expected Earnings</div>
+             </div>
+
+             {/* Route Visualization - Uber Style (Line with squares) */}
+             <div className="flex flex-col gap-6 px-4">
+               <div className="flex gap-4 relative">
+                 {/* Connecting Line */}
+                 <div className="absolute left-[9px] top-3 bottom-0 w-0.5 bg-slate-200"></div>
+                 
+                 <div className="w-5 h-5 bg-black rounded-sm z-10 flex-shrink-0"></div> {/* Pickup Square */}
+                 <div>
+                   <div className="text-lg font-bold text-slate-900 leading-none mb-1">{incomingRequest.pickup}</div>
+                   <div className="text-slate-400 text-xs uppercase font-bold">Pickup</div>
+                 </div>
+               </div>
+               
+               <div className="flex gap-4 relative">
+                 <div className="w-5 h-5 border-[3px] border-black bg-white z-10 flex-shrink-0"></div> {/* Dropoff Square */}
+                 <div>
+                   <div className="text-lg font-bold text-slate-900 leading-none mb-1">{incomingRequest.dropoff}</div>
+                   <div className="text-slate-400 text-xs uppercase font-bold">Dropoff • {incomingRequest.distance}</div>
+                 </div>
+               </div>
              </div>
           </div>
-        )}
-      </div>
 
-      {/* --- BOTTOM HALF: CONTENT --- */}
-      <div className="flex-1 bg-white rounded-t-3xl -mt-6 z-10 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] overflow-y-auto relative">
-        <div className="w-12 h-1.5 bg-slate-300 rounded-full mx-auto my-3" />
-        
-        <div className="p-5 pb-8 space-y-6">
-          
-          {/* 1. OFFLINE STATE */}
-          {!isOnline && (
-            <div className="text-center py-8">
-              <div className="w-24 h-24 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Power className="w-10 h-10 text-slate-400" />
-              </div>
-              <h2 className="text-2xl font-bold text-slate-900 mb-2">You are Offline</h2>
-              <p className="text-slate-500 mb-8 max-w-xs mx-auto">Go online to start receiving ride requests and earning money.</p>
-              <button 
-                onClick={handleGoOnline}
-                className="w-full bg-emerald-600 text-white py-4 rounded-xl font-bold text-lg shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition active:scale-95"
-              >
-                GO ONLINE
-              </button>
-            </div>
-          )}
-
-          {/* 2. ONLINE / SEARCHING */}
-          {isOnline && !incomingRequest && !activeRide && (
-            <div className="text-center py-10">
-              <div className="relative w-20 h-20 mx-auto mb-6">
-                <span className="absolute inset-0 rounded-full bg-emerald-100 animate-ping opacity-75"></span>
-                <div className="relative w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center border-2 border-emerald-100">
-                  <div className="w-3 h-3 bg-emerald-500 rounded-full shadow-[0_0_10px_rgba(16,185,129,0.5)]"></div>
-                </div>
-              </div>
-              <h3 className="text-xl font-bold text-slate-800 mb-2">Finding Rides...</h3>
-              <p className="text-slate-500 mb-8">Stay in high demand areas for more requests.</p>
-              <button 
-                onClick={handleGoOffline}
-                className="px-8 py-3 rounded-full border-2 border-red-100 text-red-500 font-bold hover:bg-red-50 transition"
-              >
-                Go Offline
-              </button>
-            </div>
-          )}
-
-          {/* 3. INCOMING REQUEST */}
-          {incomingRequest && (
-            <div className="animate-in slide-in-from-bottom duration-300">
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-2">
-                  <div className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide">M-Pesa</div>
-                  <span className="text-slate-400 text-sm font-medium">• 2 min away</span>
-                </div>
-                <div className="text-right">
-                  <div className="text-2xl font-bold text-slate-900">KES {incomingRequest.fare}</div>
-                  <div className="text-xs text-slate-400 font-medium uppercase">Est. Fare</div>
-                </div>
-              </div>
-
-              {/* Route */}
-              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 mb-6 relative overflow-hidden">
-                <div className="absolute left-7 top-4 bottom-4 w-0.5 border-l-2 border-dashed border-slate-300"></div>
-                <div className="relative z-10 space-y-6">
-                  <div className="flex gap-4">
-                    <div className="w-6 h-6 rounded-full border-4 border-emerald-500 bg-white shadow-sm flex-shrink-0 mt-0.5"></div>
-                    <div>
-                      <div className="text-xs text-slate-500 font-bold uppercase tracking-wider mb-0.5">Pickup</div>
-                      <div className="font-semibold text-slate-900 text-lg leading-tight">{incomingRequest.pickup}</div>
-                    </div>
-                  </div>
-                  <div className="flex gap-4">
-                    <div className="w-6 h-6 rounded-full bg-slate-900 shadow-sm flex-shrink-0 mt-0.5"></div>
-                    <div>
-                      <div className="text-xs text-slate-500 font-bold uppercase tracking-wider mb-0.5">Dropoff</div>
-                      <div className="font-semibold text-slate-900 text-lg leading-tight">{incomingRequest.dropoff}</div>
-                    </div>
-                  </div>
-                </div>
-                <div className="absolute top-4 right-4 text-right">
-                  <div className="text-xl font-bold text-slate-700">{incomingRequest.distance}</div>
-                  <div className="text-xs text-slate-400">Distance</div>
-                </div>
-              </div>
-
-              {/* Actions */}
-              <div className="grid grid-cols-4 gap-4">
-                <button 
-                  onClick={() => setIncomingRequest(null)}
-                  className="col-span-1 bg-slate-100 text-slate-600 rounded-xl flex flex-col items-center justify-center py-3 hover:bg-slate-200 transition"
-                >
-                  <X className="w-6 h-6" />
-                </button>
-                <button 
-                  onClick={acceptRide}
-                  className="col-span-3 bg-emerald-600 text-white rounded-xl flex items-center justify-center gap-3 py-4 shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition active:scale-95"
-                >
-                  <Bell className="w-6 h-6 fill-white/20" />
-                  <span className="font-bold text-lg">Accept Ride</span>
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* 4. ACTIVE RIDE */}
-          {activeRide && (
-            <div className="animate-in fade-in">
-              {/* Passenger Info Card */}
-              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex items-center gap-4 mb-6">
-                <div className="w-14 h-14 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center text-xl font-bold">
-                  {activeRide.passengerName.charAt(0)}
-                </div>
-                <div className="flex-1">
-                  <div className="font-bold text-slate-900 text-lg">{activeRide.passengerName}</div>
-                  <div className="flex items-center gap-1 text-slate-500 text-sm">
-                    <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" /> {activeRide.rating} Rating
-                  </div>
-                </div>
-                <button className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center hover:bg-emerald-200 transition">
-                  <Phone className="w-5 h-5" />
-                </button>
-              </div>
-
-              <div className="space-y-4">
-                 <div className="flex justify-between items-center px-2">
-                   <div>
-                      <div className="text-slate-400 text-xs font-bold uppercase tracking-wider">Destination</div>
-                      <div className="text-xl font-bold text-slate-900">{activeRide.dropoff}</div>
-                   </div>
-                   <div className="text-right">
-                      <div className="text-slate-400 text-xs font-bold uppercase tracking-wider">Fare</div>
-                      <div className="text-xl font-bold text-emerald-600">KES {activeRide.fare}</div>
-                   </div>
-                 </div>
-
-                 <button 
-                   onClick={completeRide}
-                   className="w-full bg-emerald-600 text-white font-bold text-lg py-4 rounded-xl shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition active:scale-95 mt-4"
-                 >
-                   Complete Trip
-                 </button>
-              </div>
-            </div>
-          )}
-          
+          {/* Footer Actions */}
+          <div className="mt-8 pt-6 border-t border-slate-100 grid grid-cols-6 gap-3">
+             <button 
+               onClick={() => setIncomingRequest(null)}
+               className="col-span-2 flex flex-col items-center justify-center p-4 rounded-xl bg-slate-100 hover:bg-slate-200 transition active:scale-95"
+             >
+               <X className="w-6 h-6 text-slate-600 mb-1" />
+               <span className="text-xs font-bold text-slate-600 uppercase">Decline</span>
+             </button>
+             <button 
+               onClick={acceptRide}
+               className="col-span-4 flex flex-col items-center justify-center p-4 rounded-xl bg-black text-white hover:bg-slate-800 transition active:scale-95 shadow-xl"
+             >
+               <span className="text-xl font-bold">ACCEPT</span>
+               <span className="text-[10px] text-slate-400 uppercase tracking-widest mt-0.5">Automated Dispatch</span>
+             </button>
+          </div>
         </div>
-      </div>
-    </div>
+      )}
+
+      {/* 4. ACTIVE RIDE - COMMAND CENTER */}
+      {activeRide && (
+        <div className="animate-in fade-in h-full flex flex-col">
+          {/* Passenger Strip */}
+          <div className="flex items-center justify-between p-4 bg-slate-50 border border-slate-100 rounded-xl mb-6">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-indigo-600 text-white rounded-full flex items-center justify-center text-lg font-bold">
+                {activeRide.passengerName.charAt(0)}
+              </div>
+              <div>
+                <div className="font-bold text-slate-900">{activeRide.passengerName}</div>
+                <div className="flex items-center text-xs text-slate-500 font-bold bg-white px-2 py-0.5 rounded-full border border-slate-200 w-fit mt-1">
+                   {activeRide.rating} ★
+                </div>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <button className="p-3 bg-white border border-slate-200 rounded-full text-slate-700 hover:bg-slate-50">
+                <Phone className="w-5 h-5" />
+              </button>
+              <button className="p-3 bg-white border border-slate-200 rounded-full text-slate-700 hover:bg-slate-50">
+                <Shield className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+
+          <div className="flex-1 space-y-6">
+             <div className="px-2">
+                <div className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Destination</div>
+                <div className="text-2xl font-bold text-slate-900 leading-tight">{activeRide.dropoff}</div>
+             </div>
+             
+             <div className="bg-emerald-50 p-4 rounded-xl border border-emerald-100 flex items-center justify-between">
+                <div>
+                   <div className="text-emerald-800 text-xs font-bold uppercase opacity-70">Payment</div>
+                   <div className="font-black text-xl text-emerald-900">KES {activeRide.fare}</div>
+                </div>
+                <div className="bg-white/50 px-3 py-1 rounded text-emerald-800 text-xs font-bold">
+                   M-PESA
+                </div>
+             </div>
+          </div>
+
+          <button 
+            onClick={completeRide}
+            className="w-full mt-6 bg-emerald-600 text-white font-bold text-lg py-5 rounded-xl shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition active:scale-95 uppercase tracking-wide"
+          >
+            Complete Trip
+          </button>
+        </div>
+      )}
+    </>
   );
 }
