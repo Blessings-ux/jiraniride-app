@@ -1,10 +1,14 @@
 // src/features/driver/DriverDashboard.jsx
 import { useState, useEffect } from 'react';
-import { Power, MapPin, Navigation, DollarSign, Bell, Shield, Menu, X, Phone, Star, Settings, Moon, Globe, ChevronRight, ArrowLeft } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Power, MapPin, Navigation, DollarSign, Bell, Shield, Menu, X, Phone, Star, Settings, Moon, Globe, ChevronRight, ArrowLeft, LogOut } from 'lucide-react';
 import { supabase } from '../../services/supabase';
 import { useWakeLock } from '../../hooks/useWakeLock';
+import { useAuthStore } from '../../store/authStore';
 
 export default function DriverDashboard() {
+  const navigate = useNavigate();
+  const { signOut } = useAuthStore();
   const [isOnline, setIsOnline] = useState(false);
   const [incomingRequest, setIncomingRequest] = useState(null);
   const [activeRide, setActiveRide] = useState(null);
@@ -53,6 +57,11 @@ export default function DriverDashboard() {
   const handleGoOnline = () => setIsOnline(true);
   const handleGoOffline = () => { setIsOnline(false); setIncomingRequest(null); };
   const acceptRide = () => { setActiveRide(incomingRequest); setIncomingRequest(null); };
+  
+  const handleLogout = async () => {
+    await signOut();
+    navigate('/login');
+  };
   const completeRide = () => { setEarnings(prev => prev + activeRide.fare); setActiveRide(null); };
 
   return (
@@ -237,6 +246,17 @@ export default function DriverDashboard() {
                   <span className="font-medium text-slate-700">Rate the App</span>
                 </div>
                 <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-emerald-500 transition" />
+              </button>
+            </div>
+
+            {/* Logout Button */}
+            <div className="pt-4">
+              <button 
+                onClick={handleLogout}
+                className="w-full flex items-center justify-center gap-3 p-4 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition font-bold"
+              >
+                <LogOut className="w-5 h-5" />
+                Log Out
               </button>
             </div>
 
